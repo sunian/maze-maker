@@ -1,0 +1,84 @@
+html {
+    font-family: Consolas, "Liberation Mono", Courier, monospace;
+    font-weight: bold;
+}
+linearH {
+    display: flex;
+    flex-direction: row;
+}
+div.padding {
+    flex-grow: 1;
+}
+div.mazeContainer {
+}
+table.maze{
+    border-spacing: 0;
+    border: 2px solid black;
+}
+table.maze td{
+    border: 2px dotted rgba(255,255,255,0.1);
+    background-size: cover;
+    padding: 0 6px;
+    cursor: pointer;
+}
+table.maze td:hover {
+    border-color: black;
+}
+table.maze td a:before {
+    content: '_';
+    color: transparent;
+    margin: 0 2px;
+}
+table.maze td.wall {
+    background-image: url("wall.png");
+}
+
+table.maze td.pitfall {
+    background-image: url("pitfall.png");
+}
+table.maze td.spikes {
+    background-image: url("spikes.png");
+}
+table.maze td.fire {
+    background-image: url("fire.png");
+}
+table.maze td.compass {
+    background-image: url("compass.png");
+}
+table.maze td.treasure {
+    background-image: url("treasure.png");
+}
+table.maze td.warp {
+    background-image: url("warp.png");
+}
+table.maze td.prison {
+    background-image: url("prison.png");
+}
+table.maze td.maker a:before {
+    content: '!';
+}
+table.maze td.mage a.a:before {
+    content: 'M';
+    color: blue;
+}
+table.maze td.warrior a.b:before {
+    content: 'W';
+    color: brown;
+}
+table.maze td.thief a.c:before {
+    content: 'T';
+    color: darkslategrey;
+}
+table.maze td.cleric a.d:before {
+    content: 'C';
+    color: darkgreen;
+}
+table.maze td.fog:not(.hidefog) {
+    background: darkgrey;
+}
+table.maze td.fog:not(.hidefog) a:before {
+    color: transparent !important;
+}
+table.maze td.maker.visible a:before {
+    color: black !important;
+}

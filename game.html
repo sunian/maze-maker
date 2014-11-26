@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Maze Maker</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.0/jquery-ui.min.js"></script>
+    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/south-street/jquery-ui.css" rel="stylesheet"
+          type="text/css"/>
+    <script src="game.js"></script>
+    <link href="game.css" rel="stylesheet" type="text/css"/>
+
+</head>
+<body>
+<h3 style="text-align: center">Play Maze Maker</h3>
+<linearH>
+    <div>
+        Grid size:<input id="gridsize" value="15"/><br><br>
+        Enter a maze:<textarea id="csv"></textarea><br><br>
+        Players:<br>
+        <input id="m" type="checkbox" checked>Mage<br>
+        <input id="w" type="checkbox" checked>Warrior<br>
+        <input id="t" type="checkbox" checked>Thief<br>
+        <input id="c" type="checkbox" checked>Cleric<br>
+        <br>
+        <input id="play" type="button" value="Play">
+    </div>
+    <div class="padding"></div>
+    <div class="maze-container"></div>
+    <div class="padding"></div>
+    <div class="controls">
+        Moves left:<br>
+        <input id="moves" value="0" /><br><br>
+        <input id="roll" type="button" value="Roll"><br><br><br><br>
+        <input id="reveal" type="button" value="Reveal Maze">
+    </div>
+</linearH>
+
+</body>
+</html>
