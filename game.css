@@ -9,20 +9,59 @@ linearH {
 div.padding {
     flex-grow: 1;
 }
-div.mazeContainer {
+div.maze-container {
+    padding-top: 4em;
+}
+div.controls, div.controls * {
+    text-align: center;
 }
 table.maze{
     border-spacing: 0;
     border: 2px solid black;
 }
 table.maze td{
-    border: 2px dotted rgba(255,255,255,0.1);
+    border: 2px dotted rgba(255,255,255,0.05);
     background-size: cover;
     padding: 0 6px;
     cursor: pointer;
+    position: relative;
+}
+table.maze td.stuck.visible {
+    border-color: yellow;
+}
+table.maze td.dead.visible {
+    border-color: red;
 }
 table.maze td:hover {
     border-color: black;
+}
+table.maze td span.top {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    top: -1.7em;
+    text-align: center;
+}
+table.maze td span.left {
+    position: absolute;
+    width: 3em;
+    left: -4em;
+    top: 25%;
+    text-align: right;
+}
+table.maze td span.bottom {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    bottom: -1.7em;
+    text-align: center;
+}
+table.maze td span.right {
+    position: absolute;
+    width: 3em;
+    right: -4em;
+    top: 25%;
+    text-align: left;
 }
 table.maze td a:before {
     content: '_';
@@ -33,29 +72,29 @@ table.maze td.wall {
     background-image: url("wall.png");
 }
 
-table.maze td.pitfall {
+table.maze td.pitfall.visible {
     background-image: url("pitfall.png");
 }
-table.maze td.spikes {
+table.maze td.spikes.visible {
     background-image: url("spikes.png");
 }
-table.maze td.fire {
+table.maze td.fire.visible {
     background-image: url("fire.png");
 }
-table.maze td.compass {
+table.maze td.compass.visible {
     background-image: url("compass.png");
 }
-table.maze td.treasure {
+table.maze td.treasure.visible {
     background-image: url("treasure.png");
 }
-table.maze td.warp {
+table.maze td.warp.visible {
     background-image: url("warp.png");
 }
-table.maze td.prison {
+table.maze td.prison.visible {
     background-image: url("prison.png");
 }
 table.maze td.maker a:before {
-    content: '!';
+    content: 'ಠ';
 }
 table.maze td.mage a.a:before {
     content: 'M';
@@ -79,6 +118,6 @@ table.maze td.fog:not(.hidefog) {
 table.maze td.fog:not(.hidefog) a:before {
     color: transparent !important;
 }
-table.maze td.maker.visible a:before {
-    color: black !important;
+table.maze td.maker.LOS a:before, table.maze td.maker.visible a:before {
+    color: orangered !important;
 }

@@ -14,9 +14,9 @@
 <body>
 <h3 style="text-align: center">Play Maze Maker</h3>
 <linearH>
-    <div>
+    <div class="padding">
         Grid size:<input id="gridsize" value="15"/><br><br>
-        Enter a maze:<textarea id="csv"></textarea><br><br>
+        Enter a maze:<textarea id="csv" style="color: transparent"></textarea><br><br>
         Players:<br>
         <input id="m" type="checkbox" checked>Mage<br>
         <input id="w" type="checkbox" checked>Warrior<br>
@@ -25,13 +25,14 @@
         <br>
         <input id="play" type="button" value="Play">
     </div>
-    <div class="padding"></div>
+    <!--<div class="padding"></div>-->
     <div class="maze-container"></div>
-    <div class="padding"></div>
-    <div class="controls">
+    <!--<div class="padding"></div>-->
+    <div class="controls padding">
+        <div id="game-status">Game not started</div><br>
         Moves left:<br>
         <input id="moves" value="0" /><br><br>
-        <input id="roll" type="button" value="Roll"><br><br><br><br>
+        <input id="roll" type="button" value="Roll d6"><br><br><br><br>
         <input id="reveal" type="button" value="Reveal Maze">
     </div>
 </linearH>
