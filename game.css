@@ -16,15 +16,18 @@ div.controls, div.controls * {
     text-align: center;
 }
 table.maze{
+    /*border-collapse: collapse;*/
     border-spacing: 0;
     border: 2px solid black;
 }
 table.maze td{
     border: 2px dotted rgba(255,255,255,0.05);
-    background-size: cover;
+    background-size: 100% 100%;
+    background-repeat: round;
     padding: 0 6px;
     cursor: pointer;
     position: relative;
+    background-color: darkkhaki;
 }
 table.maze td.stuck.visible {
     border-color: yellow;
@@ -33,7 +36,7 @@ table.maze td.dead.visible {
     border-color: red;
 }
 table.maze td:hover {
-    border-color: black;
+    border-color: black !important;
 }
 table.maze td span.top {
     position: absolute;
@@ -94,30 +97,31 @@ table.maze td.prison.visible {
     background-image: url("prison.png");
 }
 table.maze td.maker a:before {
-    content: 'ಠ';
+    content: '#';
+    /*ಠ*/
 }
-table.maze td.mage a.a:before {
+table.maze td.mage.visible a.a:before {
     content: 'M';
     color: blue;
 }
-table.maze td.warrior a.b:before {
+table.maze td.warrior.visible a.b:before {
     content: 'W';
     color: brown;
 }
-table.maze td.thief a.c:before {
+table.maze td.thief.visible a.c:before {
     content: 'T';
     color: darkslategrey;
 }
-table.maze td.cleric a.d:before {
+table.maze td.cleric.visible a.d:before {
     content: 'C';
     color: darkgreen;
 }
 table.maze td.fog:not(.hidefog) {
-    background: darkgrey;
+    background: grey;
 }
 table.maze td.fog:not(.hidefog) a:before {
     color: transparent !important;
 }
-table.maze td.maker.LOS a:before, table.maze td.maker.visible a:before {
+table.maze td.maker.LOS a:before, table.maze td.maker.initial a:before {
     color: orangered !important;
 }

@@ -4,24 +4,29 @@
 var gridSize = 15;
 var players = null;
 var grid = null;
-var turn = 0;
+var turn = -1;
 var PLAYER_STATUS = {OK: "ok", STUCK: "stuck", DEAD: "dead", PRISON: "prison"};
-var keymap = {32: "space", 37: "left", 38: "up", 39: "right", 40: "down"};
+var keymap = {32: "space", 37: "left", 38: "up", 39: "right", 40: "down", 77: "mage", 87: "warrior", 84: "thief", 67: "cleric"};
+var GRID_VALUES = {EMPTY: "_", ENTRANCE: "E", WALL: "W", TREASURE: "T",
+	FIRE: "F", PITFALL: "P", SPIKES: "S", MAZE_MAKER: "M", WARP: "@",
+	PRISON_1: "1", PRISON_2: "2", PRISON_3: "3", PRISON_4: "4"
+};
 
-var mage = {class: "mage", fatal: "pitfall", immune: "fire", status: PLAYER_STATUS.OK};
-var warrior = {class: "warrior", fatal: "spikes", immune: "pitfall", status: PLAYER_STATUS.OK};
-var thief = {class: "thief", fatal: "fire", immune: "spikes", status: PLAYER_STATUS.OK};
-var cleric = {class: "cleric", fatal: "none", immune: "none", status: PLAYER_STATUS.OK};
+var mage = {class: "mage", fatal: "pitfall", immune: "fire"};
+var warrior = {class: "warrior", fatal: "spikes", immune: "pitfall"};
+var thief = {class: "thief", fatal: "fire", immune: "spikes"};
+var cleric = {class: "cleric", fatal: "none", immune: "none"};
+var startConditions = {status: PLAYER_STATUS.OK, warp: 0};
 var maker = null;
 
 $(function () {
 	$("#play").click(function () {
 		players = [];
 		maker = {};
-		if ($("input#m")[0].checked) players.push($.extend({}, mage));
-		if ($("input#w")[0].checked) players.push($.extend({}, warrior));
-		if ($("input#t")[0].checked) players.push($.extend({}, thief));
-		if ($("input#c")[0].checked) players.push($.extend({}, cleric));
+		if ($("input#m")[0].checked) players.push($.extend({}, mage, startConditions));
+		if ($("input#w")[0].checked) players.push($.extend({}, warrior, startConditions));
+		if ($("input#t")[0].checked) players.push($.extend({}, thief, startConditions));
+		if ($("input#c")[0].checked) players.push($.extend({}, cleric, startConditions));
 		shuffle(players);
 		initMaze($("#csv").val());
 		turn = 0;
@@ -32,14 +37,14 @@ $(function () {
 		$("input#moves").val(Math.ceil(Math.random() * 6));
 	});
 	$("#reveal").click(function () {
-		$("table.maze td.fog").addClass("hidefog visible");
-		$("table.maze td.maker").addClass("visible");
+		$("table.maze td:not(.visible)").addClass("hidefog visible");
+		$("table.maze td.maker").addClass("initial");
 	});
 	$(document).keydown(function (e) {
 		//console.log(e.which);
 		if (players != null && turn == players.length) {
-			$("table.maze td.hidefog").removeClass("hidefog");
-			$("table.maze td.maker").removeClass("visible");
+			$("table.maze td.hidefog").removeClass("hidefog visible");
+			$("table.maze td.maker").removeClass("initial");
 			var valid = true;
 			switch (keymap[e.which]) {
 				case "space":
@@ -62,6 +67,21 @@ $(function () {
 				case "down":
 					if (maker.rowTemp < gridSize - 1 && maker.rowTemp <= maker.row)
 						maker.rowTemp++;
+					break;
+				case "mage":
+				case "warrior":
+				case "thief":
+				case "cleric":
+					if (getCell(maker.rowTemp, maker.colTemp).hasClass(keymap[e.which])) {
+						for (var p in players) {
+							if (players[p].class == keymap[e.which]) {
+								putInPrison(players[p]);
+								updatePlayer(players[p]);
+								advanceTurn();
+								break;
+							}
+						}
+					}
 					break;
 				default :
 					valid = false;
@@ -87,7 +107,7 @@ function initMaze(csv) {
 			var cell = $("<td class=''><a class='a'></a><a class='b'></a><br><a class='c'></a><a class='d'></a></td>");
 			switch (grid[i][j]) {
 				case "M":
-					cell.addClass("maker visible");
+					cell.addClass("maker initial");
 					maker.row = i; maker.col = j;
 					maker.rowTemp = i; maker.colTemp = j;
 					break;
@@ -141,18 +161,31 @@ function initMaze(csv) {
 }
 
 function cellClicked(e) {
-	if (turn < players.length) {
+	if (turn >= 0 && turn < players.length) {
 		var moves = $("input#moves").val() * 1;
 		if (moves == 0) return;
-		if (getCell(e.data[0], e.data[1]).hasClass("wall")) return;
-		if (e.data[0] == players[turn].row) {
-			if (Math.abs(e.data[1] - players[turn].col) != 1) return;
-		} else if (e.data[1] == players[turn].col) {
-			if (Math.abs(e.data[0] - players[turn].row) != 1) return;
+		var playerCell = getCell(e.data[0], e.data[1]);
+		if (playerCell.hasClass("wall")) return;
+		var player = players[turn];
+		if (e.data[0] == player.row && e.data[1] == player.col) {
+			if (playerCell.hasClass("stuck") || (player.class == "cleric" && playerCell.hasClass("dead"))) {
+				playerCell.removeClass("stuck dead fire pitfall spikes");
+				moves--;
+				for (var p in players)
+					if (e.data[0] == players[p].row && e.data[1] == players[p].col)
+						players[p].status = PLAYER_STATUS.OK;
+			} else return;
+		} else if ((e.data[0] == player.row || e.data[1] == player.col) &&
+			Math.abs(e.data[1] - player.col) <= 1 && Math.abs(e.data[0] - player.row) <= 1
+		) {
+			player.row = e.data[0];
+			player.col = e.data[1];
+			moves--;
+			updatePlayer(player);
+			if (player.status != PLAYER_STATUS.OK) {
+				moves = 0;
+			}
 		} else return;
-		players[turn].row = e.data[0];
-		players[turn].col = e.data[1];
-		moves--;
 		$("input#moves").val(moves);
 		if (moves == 0) advanceTurn();
 		updateGameState();
@@ -160,6 +193,7 @@ function cellClicked(e) {
 }
 
 function advanceTurn() {
+	if (turn >= 0 && turn < players.length) players[turn].warp--;
 	turn++;
 	if (turn < players.length) {
 		if (players[turn].status != PLAYER_STATUS.OK) {
@@ -177,27 +211,28 @@ function getCell(row, col) {
 }
 
 function updateGameState() {
-	updateGameStatus();
-	updatePlayers();
+	for (var p in players) {
+		updatePlayer(players[p]);
+	}
 	updateMaker();
 	updateFog();
+	updateGameStatus();
 }
 
 function updateFog() {
 	for (var p in players) {
 		if (players[p].status != PLAYER_STATUS.PRISON) {
-			getCell(players[p].row, players[p].col).removeClass("fog");
 			getCell(players[p].row - 1, players[p].col).removeClass("fog");
 			getCell(players[p].row + 1, players[p].col).removeClass("fog");
 			getCell(players[p].row, players[p].col - 1).removeClass("fog");
 			getCell(players[p].row, players[p].col + 1).removeClass("fog");
-			if (!getCell(players[p].row - 1, players[p].col).hasClass("wall") || !getCell(players[p].row, players[p].col + 1).hassClass("wall"))
+			if (!getCell(players[p].row - 1, players[p].col).hasClass("wall") || !getCell(players[p].row, players[p].col + 1).hasClass("wall"))
 				getCell(players[p].row - 1, players[p].col + 1).removeClass("fog");
-			if (!getCell(players[p].row - 1, players[p].col).hasClass("wall") || !getCell(players[p].row, players[p].col - 1).hassClass("wall"))
+			if (!getCell(players[p].row - 1, players[p].col).hasClass("wall") || !getCell(players[p].row, players[p].col - 1).hasClass("wall"))
 				getCell(players[p].row - 1, players[p].col - 1).removeClass("fog");
-			if (!getCell(players[p].row + 1, players[p].col).hasClass("wall") || !getCell(players[p].row, players[p].col + 1).hassClass("wall"))
+			if (!getCell(players[p].row + 1, players[p].col).hasClass("wall") || !getCell(players[p].row, players[p].col + 1).hasClass("wall"))
 				getCell(players[p].row + 1, players[p].col + 1).removeClass("fog");
-			if (!getCell(players[p].row + 1, players[p].col).hasClass("wall") || !getCell(players[p].row, players[p].col - 1).hassClass("wall"))
+			if (!getCell(players[p].row + 1, players[p].col).hasClass("wall") || !getCell(players[p].row, players[p].col - 1).hasClass("wall"))
 				getCell(players[p].row + 1, players[p].col - 1).removeClass("fog");
 		}
 	}
@@ -206,18 +241,63 @@ function updateFog() {
 function updateGameStatus() {
 	if (turn < players.length) {
 		$("input#reveal").css("visibility", "hidden");
-		$("div#game-status").text(players[turn].class + "'s turn to move!");
+		$("div#game-status").html(players[turn].class + "'s<br>turn to move!");
 	} else {
 		$("input#reveal").css("visibility", "");
-		$("div#game-status").text("Maze Maker's turn to move!");
+		$("div#game-status").html("maze maker's<br>turn to move!");
+	}
+	var okPlayer = false;
+	for (var p in players) {
+		if (grid[players[p].row][players[p].col] == GRID_VALUES.TREASURE) {
+			$("div#game-status").html("GAME OVER<br>players win!");
+			turn = -1;
+			return;
+		}
+		if (players[p].status == PLAYER_STATUS.OK) okPlayer = true;
+	}
+	if (!okPlayer) {
+		$("div#game-status").html("GAME OVER<br>maze maker wins!");
+		turn = -1;
 	}
 }
 
-function updatePlayers() {
-	for (var p in players) {
-		$("table.maze td").removeClass(players[p].class);
-		getCell(players[p].row, players[p].col).addClass(players[p].class);
+function updatePlayer(player) {
+	var playerCell = getCell(player.row, player.col);
+	if (player.status != PLAYER_STATUS.PRISON)
+		playerCell.addClass("visible").removeClass("fog");
+	switch (grid[player.row][player.col]) {
+		case GRID_VALUES.FIRE:
+		case GRID_VALUES.PITFALL:
+		case GRID_VALUES.SPIKES:
+			if (playerCell.hasClass(player.fatal)) {
+				grid[player.row][player.col] = GRID_VALUES.EMPTY;
+				player.status = PLAYER_STATUS.DEAD;
+				playerCell.addClass("dead");
+			} else if (!playerCell.hasClass(player.immune)) {
+				grid[player.row][player.col] = GRID_VALUES.EMPTY;
+				player.status = PLAYER_STATUS.STUCK;
+				playerCell.addClass("stuck");
+			}
+			break;
+		case GRID_VALUES.WARP:
+			if (player.warp <= 0) {
+				player.warp = 2;
+				for (var i = 0; i < gridSize; i++) {
+					for (var j = 0; j < gridSize; j++) {
+						if (i != player.row && j != player.col && grid[i][j] == GRID_VALUES.WARP) {
+							player.row = i; player.col = j;
+							updatePlayer(player);
+							return;
+						}
+					}
+				}
+			}
+			break;
+		default:
+			break;
 	}
+	$("table.maze td").removeClass(player.class);
+	playerCell.addClass(player.class);
 }
 
 function updateMaker() {
@@ -231,6 +311,7 @@ function updateMaker() {
 			var hasWall = false;
 			for (var i = players[p].row; i != maker.row + rowDiff; i += rowDiff) {
 				for (var j = players[p].col; j != maker.col + colDiff; j += colDiff) {
+					console.log("checked " + i + " " + j);
 					if (getCell(i, j).hasClass("wall")) hasWall = true;
 				}
 			}
@@ -240,6 +321,25 @@ function updateMaker() {
 			}
 		}
 	}
+}
+
+function putInPrison(player) {
+	var emptyPrisons = [];
+	for (var i = 0; i < gridSize; i++) {
+		for (var j = 0; j < gridSize; j++) {
+			if (grid[i][j] >= GRID_VALUES.PRISON_1 && grid[i][j] <= GRID_VALUES.PRISON_4 && 
+				!getCell(i, j).hasClass("stuck")) {
+				emptyPrisons.push([i, j]);
+			}
+		}
+	}
+	shuffle(emptyPrisons);
+	var row = emptyPrisons[0][0];
+	var col = emptyPrisons[0][1];
+	player.row = maker.row = maker.rowTemp = row;
+	player.col = maker.col = maker.colTemp = col;
+	player.status = PLAYER_STATUS.PRISON;
+	getCell(row, col).addClass("stuck");
 }
 
 function shuffle(array) {
