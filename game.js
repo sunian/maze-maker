@@ -1,7 +1,7 @@
 /**
  * Created by Sun on 11/24/2014.
  */
-var gridSize = 15;
+var gridHeight = 15, gridWidth = 15;
 var players = null;
 var grid = null;
 var turn = -1;
@@ -61,7 +61,7 @@ $(function () {
 						maker.colTemp--;
 					break;
 				case "right":
-					if (maker.colTemp < gridSize - 1 && maker.colTemp <= maker.col)
+					if (maker.colTemp < gridWidth - 1 && maker.colTemp <= maker.col)
 						maker.colTemp++;
 					break;
 				case "up":
@@ -69,7 +69,7 @@ $(function () {
 						maker.rowTemp--;
 					break;
 				case "down":
-					if (maker.rowTemp < gridSize - 1 && maker.rowTemp <= maker.row)
+					if (maker.rowTemp < gridHeight - 1 && maker.rowTemp <= maker.row)
 						maker.rowTemp++;
 					break;
 				case "mage":
@@ -101,13 +101,15 @@ $(function () {
 
 function initMaze(csv) {
 	grid = csv.split("\n");
+	gridHeight = grid.length;
 	for (var row in grid) {
 		grid[row] = grid[row].split(",");
+		gridWidth = grid[row].length;
 	}
 	var maze = $("<table class='maze'></table>");
-	for (var i = 0; i < gridSize; i++) {
+	for (var i = 0; i < gridHeight; i++) {
 		var row = $("<tr></tr>");
-		for (var j = 0; j < gridSize; j++) {
+		for (var j = 0; j < gridWidth; j++) {
 			var cell = $("<td class=''><a class='a'></a><a class='b'></a><br><a class='c'></a><a class='d'></a></td>");
 			switch (grid[i][j]) {
 				case "M":
@@ -154,8 +156,8 @@ function initMaze(csv) {
 			}
 			if (i == 0) cell.append("<span class='top'>" + (j + 1) + "</span>");
 			if (j == 0) cell.append("<span class='left'>" + (i + 1) + "</span>");
-			if (i == gridSize - 1) cell.append("<span class='bottom'>" + (j + 1) + "</span>");
-			if (j == gridSize - 1) cell.append("<span class='right'>" + (i + 1) + "</span>");
+			if (i == gridHeight - 1) cell.append("<span class='bottom'>" + (j + 1) + "</span>");
+			if (j == gridWidth - 1) cell.append("<span class='right'>" + (i + 1) + "</span>");
 			cell.addClass("fog");
 			row.append(cell);
 			cell.bind("click", [i, j], cellClicked);
@@ -224,7 +226,7 @@ function advanceTurn() {
 }
 
 function getCell(row, col) {
-	if (row < 0 || row >= gridSize || col < 0 || col >= gridSize) return $();
+	if (row < 0 || row >= gridHeight || col < 0 || col >= gridWidth) return $();
 	return $($("table.maze tr")[row].children[col]);
 }
 
@@ -301,8 +303,8 @@ function updatePlayer(player) {
 		case GRID_VALUES.WARP:
 			if (player.warp <= 0) {
 				player.warp = 2;
-				for (var i = 0; i < gridSize; i++) {
-					for (var j = 0; j < gridSize; j++) {
+				for (var i = 0; i < gridHeight; i++) {
+					for (var j = 0; j < gridWidth; j++) {
 						if (i != player.row && j != player.col && grid[i][j] == GRID_VALUES.WARP) {
 							player.row = i; player.col = j;
 							updatePlayer(player);
@@ -376,8 +378,8 @@ function updateCompass() {
 
 function putInPrison(player) {
 	var emptyPrisons = [];
-	for (var i = 0; i < gridSize; i++) {
-		for (var j = 0; j < gridSize; j++) {
+	for (var i = 0; i < gridHeight; i++) {
+		for (var j = 0; j < gridWidth; j++) {
 			if (grid[i][j] >= GRID_VALUES.PRISON_1 && grid[i][j] <= GRID_VALUES.PRISON_4 && 
 				!getCell(i, j).hasClass("stuck")) {
 				emptyPrisons.push([i, j]);
