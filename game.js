@@ -5,9 +5,10 @@ var gridSize = 15;
 var players = null;
 var grid = null;
 var turn = -1;
+var compassHolder = null;
 var PLAYER_STATUS = {OK: "ok", STUCK: "stuck", DEAD: "dead", PRISON: "prison"};
 var keymap = {32: "space", 37: "left", 38: "up", 39: "right", 40: "down", 77: "mage", 87: "warrior", 84: "thief", 67: "cleric"};
-var GRID_VALUES = {EMPTY: "_", ENTRANCE: "E", WALL: "W", TREASURE: "T",
+var GRID_VALUES = {EMPTY: "_", ENTRANCE: "E", WALL: "W", TREASURE: "T", COMPASS: "C",
 	FIRE: "F", PITFALL: "P", SPIKES: "S", MAZE_MAKER: "M", WARP: "@",
 	PRISON_1: "1", PRISON_2: "2", PRISON_3: "3", PRISON_4: "4"
 };
@@ -18,11 +19,13 @@ var thief = {class: "thief", fatal: "fire", immune: "spikes"};
 var cleric = {class: "cleric", fatal: "none", immune: "none"};
 var startConditions = {status: PLAYER_STATUS.OK, warp: 0};
 var maker = null;
+var treasure = null;
 
 $(function () {
 	$("#play").click(function () {
 		players = [];
 		maker = {};
+		treasure = {};
 		if ($("input#m")[0].checked) players.push($.extend({}, mage, startConditions));
 		if ($("input#w")[0].checked) players.push($.extend({}, warrior, startConditions));
 		if ($("input#t")[0].checked) players.push($.extend({}, thief, startConditions));
@@ -30,6 +33,7 @@ $(function () {
 		shuffle(players);
 		initMaze($("#csv").val());
 		turn = 0;
+		$("input#moves").val(0);
 		updateGameState();
 	});
 	$("#roll").click(function () {
@@ -116,6 +120,7 @@ function initMaze(csv) {
 					break;
 				case "T":
 					cell.addClass("treasure");
+					treasure.row = i; treasure.col = j;
 					break;
 				case "@":
 					cell.addClass("warp");
@@ -174,7 +179,20 @@ function cellClicked(e) {
 				for (var p in players)
 					if (e.data[0] == players[p].row && e.data[1] == players[p].col)
 						players[p].status = PLAYER_STATUS.OK;
-			} else return;
+			} else {
+				if (compassHolder == null) return;
+				var playersHere = [];
+				var playerWithCompass = -1;
+				for (var p in players)
+					if (e.data[0] == players[p].row && e.data[1] == players[p].col) {
+						playersHere.push(players[p]);
+						if (players[p] == compassHolder) playerWithCompass = playersHere.length;
+					}
+				if (playerWithCompass < 0) return;
+				if (playersHere.length < 2) return;
+				if (playerWithCompass == playersHere.length) playerWithCompass = 0;
+				compassHolder = playersHere[playerWithCompass];
+			}
 		} else if ((e.data[0] == player.row || e.data[1] == player.col) &&
 			Math.abs(e.data[1] - player.col) <= 1 && Math.abs(e.data[0] - player.row) <= 1
 		) {
@@ -216,6 +234,7 @@ function updateGameState() {
 	}
 	updateMaker();
 	updateFog();
+	updateCompass();
 	updateGameStatus();
 }
 
@@ -293,6 +312,10 @@ function updatePlayer(player) {
 				}
 			}
 			break;
+		case GRID_VALUES.COMPASS:
+			compassHolder = player;
+			grid[player.row][player.col] = GRID_VALUES.EMPTY;
+			break;
 		default:
 			break;
 	}
@@ -319,6 +342,34 @@ function updateMaker() {
 				getCell(maker.row, maker.col).addClass("LOS");
 				break;
 			}
+		}
+	}
+}
+
+var divisions = 8;
+var prevAngle = null, currentAngle = null;
+function updateCompass() {
+	var needle = $("img#needle");
+	needle.hide();
+	if (compassHolder == null) {
+		$("div#compass").html("");
+	} else {
+		$("div#compass").html(compassHolder.class + "<br>holds the compass");
+		if (getCell(compassHolder.row, compassHolder.col).hasClass("visible")) {
+			needle.show();
+			var angle = Math.atan2(treasure.row - compassHolder.row, treasure.col - compassHolder.col);
+			angle = Math.round(angle / (2 * Math.PI / divisions)) * (360 / divisions) + 0;
+			if (prevAngle == null) prevAngle = angle;
+			if (currentAngle == null) currentAngle = angle;
+			if (Math.sign(angle) == Math.sign(prevAngle) || Math.sign(angle) == 0 || Math.sign(prevAngle) == 0) {
+				currentAngle += (angle - prevAngle);
+			} else {
+				var way1 = angle - prevAngle;
+				var way2 = way1 - 360 * Math.sign(angle);
+				currentAngle += Math.abs(way1) < Math.abs(way2) ? way1 : way2;
+			}
+			prevAngle = angle;
+			needle.css("transform", "rotate(" + currentAngle + "deg)");
 		}
 	}
 }
